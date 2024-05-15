@@ -28,6 +28,7 @@ export default defineConfig({
             additionalData: `
               @use 'sass:math';
               @import "@/assets/scss/abstracts/_variables.scss";
+              @import "@/assets/scss/abstracts/_mixins.scss";
             `,
         },
     },
