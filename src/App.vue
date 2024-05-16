@@ -1,8 +1,16 @@
 <template>
   <div class="page">
-    <header class="page__header">
-      <Container>Header</Container>
-    </header>
+    <Toast
+      position="top-center"
+      :breakpoints="toastBreakPoint"
+    />
+
+    <HeaderComponent
+      class="page__header"
+      v-model:selectedStatus="selectedStatus"
+      v-model:charactersNameInput="charactersNameInput"
+      @search-click="search"
+    />
 
     <main class="page__content">
       <Container>
@@ -21,27 +29,82 @@
 <script setup>
 import CardsGroupComponent from '@/components/CardsGroupComponent.vue';
 import Container from '@/components/Container.vue';
+import HeaderComponent from '@/components/HeaderComponent.vue'
+import Toast from 'primevue/toast';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { useToast } from "primevue/usetoast";
 
 const cardListData = ref([]);
+const selectedStatus = ref();
+const charactersNameInput = ref('');
 
-async function fetchListOfCharacterData() {
-  const { data } = await axios.get('https://rickandmortyapi.com/api/character');
-  const results = data.results;
-
-  cardListData.value.push(...results.map((data)=> {
-    return {
-      ...data,
-      location: data.location.name,
-      origin: data.origin.name
-    }
-  }));
+const toast = useToast();
+const toastBreakPoint = {
+  '450px': { width: '75vw' },
 };
 
+async function search() {
+    const searchQuery = {
+      page: 1
+    };
+
+    if (charactersNameInput.value) {
+      searchQuery.name = charactersNameInput.value;
+    }
+
+    if (selectedStatus.value) {
+      searchQuery.status = selectedStatus.value;
+    }
+
+    await fetchListOfCharacter(searchQuery);
+};
+
+function showError(errorText) {
+  toast.add({ severity: 'error', summary: 'Произошла ошибка', detail: errorText, life: 2000 });
+};
+
+async function fetchListOfCharacter(searchQuery) {
+  try {
+    const { data } = await axios.get(_createCharacterUrlPath(searchQuery));
+    const results = data.results;
+    // const info = data.info;
+
+    cardListData.value = [...results.map((data)=> {
+      return {
+        ...data,
+        location: data.location.name,
+        origin: data.origin.name
+      }
+    })];
+  } catch(e) {
+    const { response } = e;
+    if (response.status === 404) {
+      showError('Не удалось найти персонажа с такими параметрами');
+      
+      return
+    }
+    
+    return showError('Неизвестная ошибка, попробуйте позже');
+  }
+};
+
+function _createCharacterUrlPath(data = { name: null, page: 1, status: null }) {
+  const { name, page, status } = data;
+
+  let url = `https://rickandmortyapi.com/api/character/?page=${page}`;
+
+  if (name) url += `&name=${name}`;
+  
+  if (status) url += `&status=${status}`;
+  
+  return url;
+}
+
 onMounted(async () => {
-    await fetchListOfCharacterData();
+    await fetchListOfCharacter();
 });
+
 </script>
 
 <style scoped lang="scss">
@@ -59,10 +122,6 @@ onMounted(async () => {
     z-index: $z-index-header;
 
     flex-shrink: 0;
-
-    height: 80px;
-
-    background-color: $white;
   }
 
   &__content {
@@ -70,9 +129,13 @@ onMounted(async () => {
     flex-direction: column;
     flex-grow: 1;
 
-    margin: 80px 0 40px 0;
+    margin: $height-header-mobile 0 $gap-conteiner 0;
 
     background-color: $main-background;
+
+    @media #{$screen-tablet} {
+        margin-top: $height-header-tablet;
+    }
   }
 
   &__cards {
