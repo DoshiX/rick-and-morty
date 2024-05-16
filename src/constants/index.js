@@ -1,3 +1,4 @@
 import STATUS_COLOR from '@/constants/StatusColor';
+import STATUS from '@/constants/StatusList';
 
-export { STATUS_COLOR };
+export { STATUS_COLOR, STATUS };

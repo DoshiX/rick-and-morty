@@ -4,8 +4,11 @@ $black: #000;
 $shark: #272b33;
 $tuna: #3c3e44;
 $silver-chalice: #9e9e9e;
+$mischka: #cdd3df;
 
+$body-background: $mischka;
 $main-background: $shark;
+$header-background: #ffffff69;
 
 $card-background: $tuna;
 $card-topic-text: $silver-chalice;
@@ -15,6 +18,8 @@ $screen-tablet: '(min-width: 650px)';
 $screen-desktop: '(min-width: 1200px)';
 
 // Sizes
+$height-header-mobile: 160px;
+$height-header-tablet: 80px;
 
 // Layout
 $width-conteiner: 1400px;
