@@ -8,7 +8,7 @@
     <HeaderComponent
       class="page__header"
       v-model:selectedStatus="selectedStatus"
-      v-model:charactersNameInput="charactersNameInput"
+      v-model:characterNameInput="charactersNameInput"
       @search-click="search"
     />
 
