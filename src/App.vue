@@ -20,16 +20,21 @@
       </Container>
     </main>
 
-    <footer class="page__footer">
-      <Container>Footer</Container>
-    </footer>
+    <PaginatorComponent
+      class="page__paginator"
+      :rows="20"
+      :first="currentPage"
+      :total-records="count"
+      @update="updatePage"
+    />
   </div>
 </template>
 
 <script setup>
 import CardsGroupComponent from '@/components/CardsGroupComponent.vue';
 import Container from '@/components/Container.vue';
-import HeaderComponent from '@/components/HeaderComponent.vue'
+import HeaderComponent from '@/components/HeaderComponent.vue';
+import PaginatorComponent from '@/components/PaginatorComponent.vue';
 import Toast from 'primevue/toast';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -38,26 +43,45 @@ import { useToast } from "primevue/usetoast";
 const cardListData = ref([]);
 const selectedStatus = ref();
 const charactersNameInput = ref('');
+const count = ref(0);
+const currentPage = ref(0);
+const searchQuery = {
+  page: 1
+};
 
 const toast = useToast();
 const toastBreakPoint = {
   '450px': { width: '75vw' },
 };
 
-async function search() {
-    const searchQuery = {
-      page: 1
-    };
+async function updatePage(data) {
+  currentPage.value = data.page;
+  await search(currentPage.value + 1, true);
+};
+
+async function search(page = 1, pagination = false) {
+
+  if (!pagination) {
+    searchQuery.page = 1
+    currentPage.value = 0
 
     if (charactersNameInput.value) {
       searchQuery.name = charactersNameInput.value;
-    }
+    } else {
+      searchQuery.name = ''
+    };
 
     if (selectedStatus.value) {
       searchQuery.status = selectedStatus.value;
-    }
+    } else {
+      searchQuery.status = ''
+    };
 
-    await fetchListOfCharacter(searchQuery);
+  } else {
+    searchQuery.page = page;
+  };
+
+    await fetchListOfCharacter(searchQuery, pagination);
 };
 
 function showError(errorText) {
@@ -68,7 +92,9 @@ async function fetchListOfCharacter(searchQuery) {
   try {
     const { data } = await axios.get(_createCharacterUrlPath(searchQuery));
     const results = data.results;
-    // const info = data.info;
+    const info = data.info;
+
+    count.value = info.count;
 
     cardListData.value = [...results.map((data)=> {
       return {
@@ -86,6 +112,12 @@ async function fetchListOfCharacter(searchQuery) {
     }
     
     return showError('Неизвестная ошибка, попробуйте позже');
+  } finally {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
   }
 };
 
@@ -129,7 +161,8 @@ onMounted(async () => {
     flex-direction: column;
     flex-grow: 1;
 
-    margin: $height-header-mobile 0 $gap-conteiner 0;
+    margin: $height-header-mobile 0 0;
+    padding-bottom: 60px;
 
     background-color: $main-background;
 
@@ -142,15 +175,11 @@ onMounted(async () => {
     margin: 25px 0;
   }
 
-  &__footer {
+  &__paginator {
     position: fixed;
     bottom: 0;
     right: 0;
     left: 0;
-
-    height: 40px;
-
-    background-color: $white;
   }
 }
 </style>
